@@ -1,4 +1,4 @@
-class HeapImpl<T extends Comparable<? super T>> implements Heap<T> {
+public class HeapImpl<T extends Comparable<? super T>> implements Heap<T> {
 	private static final int INITIAL_CAPACITY = 128;
 	private T[] _storage;
 	private int _numElements;

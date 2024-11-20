@@ -2,24 +2,20 @@
  * Represents a collision between a particle and another particle, or a particle and a wall.
  */
 public class Event implements Comparable<Event> {
-	double _timeOfEvent;
-	double _timeEventCreated;
-	Particle particleA; // particle involved in event
-	Particle particleB; // particle involved in event
+	private double timeOfEvent;
+	private double timeEventCreated;
+	private Collidable collidableA; // Collidable involved in event
+	private Collidable collidableB; // Collidable involved in event
+
 	/**
 	 * @param timeOfEvent the time when the collision will take place
 	 * @param timeEventCreated the time when the event was first instantiated and added to the queue
 	 */
-	public Event (double timeOfEvent, double timeEventCreated, Particle particleA, Particle particleB) {
-		_timeOfEvent = timeOfEvent;
-		_timeEventCreated = timeEventCreated;
-		this.particleA = particleA;
-		this.particleB = particleB;
-	}
-
-	public Event (double timeOfEvent, double timeEventCreated) {
-		_timeOfEvent = timeOfEvent;
-		_timeEventCreated = timeEventCreated;
+	public Event (double timeOfEvent, double timeEventCreated, Collidable collidableA, Collidable collidableB) {
+		this.timeOfEvent = timeOfEvent;
+		this.timeEventCreated = timeEventCreated;
+		this.collidableA = collidableA;
+		this.collidableB = collidableB;
 	}
 
 	@Override
@@ -44,4 +40,23 @@ public class Event implements Comparable<Event> {
 	public Particle[] getParticles() {
 		return new Particle[]{particleA, particleB};
 	}
+
+	/**
+	 * gets time of event
+	 * @return time of event (Double)
+	 */
+	public double getTimeOfEvent() {
+		return this.timeOfEvent;
+	}
+
+	/**
+	 * gets time of event
+	 * @return time event created (Double)
+	 */
+	public double getTimeCreated() {
+		return this.timeEventCreated;
+	}
+
+	public Collidable getCollidableA() { return this.collidableA; }
+	public Collidable getCollidableB() { return this.collidableB; }
 }

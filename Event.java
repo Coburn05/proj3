@@ -4,11 +4,19 @@
 public class Event implements Comparable<Event> {
 	double _timeOfEvent;
 	double _timeEventCreated;
-
+	Particle particleA; // particle involved in event
+	Particle particleB; // particle involved in event
 	/**
 	 * @param timeOfEvent the time when the collision will take place
 	 * @param timeEventCreated the time when the event was first instantiated and added to the queue
 	 */
+	public Event (double timeOfEvent, double timeEventCreated, Particle particleA, Particle particleB) {
+		_timeOfEvent = timeOfEvent;
+		_timeEventCreated = timeEventCreated;
+		this.particleA = particleA;
+		this.particleB = particleB;
+	}
+
 	public Event (double timeOfEvent, double timeEventCreated) {
 		_timeOfEvent = timeOfEvent;
 		_timeEventCreated = timeEventCreated;
@@ -27,5 +35,13 @@ public class Event implements Comparable<Event> {
 		} else {
 			return -1;
 		}
+	}
+
+	/**
+	 * gets both particles involved in colision
+	 * @return [particleA, particleB]
+	 */
+	public Particle[] getParticles() {
+		return new Particle[]{particleA, particleB};
 	}
 }

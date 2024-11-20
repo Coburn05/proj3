@@ -1,12 +1,47 @@
 import java.awt.*;
 import java.util.*;
 
-public class Particle {
-	private String _name;
-	private double _x, _y;
-	private double _vx, _vy;
-	private double _radius;
-	private double _lastUpdateTime;
+public class Particle implements Collidable {
+	private String name;
+	private double x, y;
+	private double vx, vy;
+	private double radius;
+	private double lastUpdateTime;
+
+	public double getX() { return this.x; }
+	public double getY() { return this.y; }
+	public double getVX() { return this.vx; }
+	public double getVY() { return this.vy; }
+	public double getRadius() { return this.radius; }
+	public double getLastUpdateTime() { return lastUpdateTime; }
+	public String getName() { return this.name; }
+
+	public double[] getVelocity() { return new double[]{this.vx, this.vy}; }
+	public double[] getPosition() { return new double[]{this.x, this.y}; }
+
+	public void setX(double x) { this.x = x; }
+	public void setY(double y) { this.y = y; }
+	public void setVX(double vx) { this.vx = vx; }
+	public void setVY(double vy) { this.vy = vy; }
+	public void setLastUpdateTime(double lastUpdateTime) { this.lastUpdateTime = lastUpdateTime; }
+	public void setName(String name) { this.name = name; }
+
+	@Override
+	public void resolveCollision(Collidable other, double time) {
+		if (other instanceof Particle) {
+			// Particle-particle collision
+			updateAfterCollision(time, (Particle) other);
+		} else if (other instanceof Wall) {
+			// Particle-wall collision
+			Wall wall = (Wall) other;
+			if (wall.getOrientation() == Wall.Orientation.VERTICAL) {
+				vx = -vx; // Invert horizontal velocity on vertical wall collision
+			} else if (wall.getOrientation() == Wall.Orientation.HORIZONTAL) {
+				vy = -vy; // Invert vertical velocity on horizontal wall collision
+			}
+		}
+	}
+
 
 	/**
 	 * Helper method to parse a string into a Particle.
@@ -31,12 +66,12 @@ public class Particle {
 	 * @param radius radius of the particle
 	 */
 	Particle (String name, double x, double y, double vx, double vy, double radius) {
-		_name = name;
-		_x = x;
-		_y = y;
-		_vx = vx;
-		_vy = vy;
-		_radius = radius;
+		this.name = name;
+		this.x = x;
+		this.y = y;
+		this.vx = vx;
+		this.vy = vy;
+		this.radius = radius;
 	}
 
 	/**
@@ -44,14 +79,14 @@ public class Particle {
 	 * DO NOT MODIFY THIS METHOD
 	 */
 	void draw (Graphics g) {
-		g.fillOval((int) (_x - _radius), (int) (_y - _radius), (int) (2*_radius), (int) (2*_radius));
+		g.fillOval((int) (x - radius), (int) (y - radius), (int) (2*radius), (int) (2*radius));
 	}
 
 	/**
 	 * Useful for debugging.
 	 */
 	public String toString () {
-		return (_name.equals("") ? "" : _name + " ") + _x + "  " + _y + " " + _vx + " " + _vy + " " + _radius;
+		return (name.equals("") ? "" : name + " ") + x + "  " + y + " " + vx + " " + vy + " " + radius;
 	}
 
 	/**
@@ -60,10 +95,10 @@ public class Particle {
 	 * @param delta the elapsed time since the last particle update
 	 */
 	public void update (double delta) {
-		double newX = _x + delta * _vx;
-		double newY = _y + delta * _vy;
-		_x = newX;
-		_y = newY;
+		double newX = x + delta * vx;
+		double newY = y + delta * vy;
+		x = newX;
+		y = newY;
 	}
 
 	/**
@@ -72,24 +107,24 @@ public class Particle {
 	 * @param now the current time in the simulation
 	 * @param other the particle that this one collided with
 	 */
-	public void updateAfterCollision (double now, Particle other) {
+	private void updateAfterCollision (double now, Particle other) {
 		double vxPrime, vyPrime;
 		double otherVxPrime, otherVyPrime;
-		double common = ((_vx - other._vx) * (_x - other._x) + 
-				 (_vy - other._vy) * (_y - other._y)) /
-			     (Math.pow(_x - other._x, 2) + Math.pow(_y - other._y, 2));
-		vxPrime = _vx - common * (_x - other._x);
-		vyPrime = _vy - common * (_y - other._y);
-		otherVxPrime = other._vx - common * (other._x - _x);
-		otherVyPrime = other._vy - common * (other._y - _y);
+		double common = ((this.vx - other.getVX()) * (this.x - other.getX()) +
+				 (this.vy - other.getVY()) * (this.y - other.getY())) /
+			     (Math.pow(this.x - other.getX(), 2) + Math.pow(this.y - other.getY(), 2));
+		vxPrime = this.vx - common * (this.x - other.getX());
+		vyPrime = this.vy - common * (this.y - other.getY());
+		otherVxPrime = other.getVX() - common * (other.getX() - this.x);
+		otherVyPrime = other.getVY() - common * (other.getY() - this.y);
 
-		_vx = vxPrime;
-		_vy = vyPrime;
-		other._vx = otherVxPrime;
-		other._vy = otherVyPrime;
+		this.vx = vxPrime;
+		this.vy = vyPrime;
+		other.setVX(otherVxPrime);
+		other.setVY(otherVyPrime);
 
-		_lastUpdateTime = now;
-		other._lastUpdateTime = now;
+		lastUpdateTime = now;
+		other.setLastUpdateTime(now);
 	}
 
 	/**
@@ -99,13 +134,13 @@ public class Particle {
 	 * @param other the other particle to consider
 	 * @return the time with the particles will collide, or infinity if they will never collide
 	 */
-	public double getCollisionTime (Particle other) {
+	public double getCollisionTime (Collidable other) {
 		// See https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
-		double a = _vx - other._vx;
-		double b = _x - other._x;
-		double c = _vy - other._vy;
-		double d = _y - other._y;
-		double r = _radius;
+		double a = this.vx - other.getVX();
+		double b = this.x - other.getX();
+		double c = this.vy - other.getVY();
+		double d = this.y - other.getY();
+		double r = this.radius;
 
 		double A = a*a + c*c;
 		double B = 2 * (a*b + c*d);

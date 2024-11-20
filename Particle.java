@@ -1,177 +1,234 @@
-import java.awt.*;
 import java.util.*;
+import java.util.function.*;
+import javax.swing.*;
+import java.awt.*;
+import java.io.*;
+import javax.sound.sampled.*;
 
-public class Particle implements Collidable {
-	private String name;
-	private double x, y;
-	private double vx, vy;
-	private double radius;
-	private double lastUpdateTime;
+public class ParticleSimulator extends JPanel {
+	private Heap<Event> events;
+	private java.util.List<Collidable> collidables;
+	private double duration;
+	private int width;
 
-	public double getX() { return this.x; }
-	public double getY() { return this.y; }
-	public double getVX() { return this.vx; }
-	public double getVY() { return this.vy; }
-	public double getRadius() { return this.radius; }
-	public double getLastUpdateTime() { return lastUpdateTime; }
-	public String getName() { return this.name; }
+	/**
+	 * @param filename the name of the file to parse containing the particles
+	 */
+	public ParticleSimulator (String filename) throws IOException {
+		events = new HeapImpl<Event>();
 
-	public double[] getVelocity() { return new double[]{this.vx, this.vy}; }
-	public double[] getPosition() { return new double[]{this.x, this.y}; }
+		// Parse the specified file and load all the particles.
+		Scanner s = new Scanner(new File(filename));
+		width = s.nextInt();
+		duration = s.nextDouble();
+		s.nextLine();
+		collidables = new ArrayList<>();
+		while (s.hasNext()) {
+			String line = s.nextLine();
+			Particle particle = Particle.build(line);
+			collidables.add(particle);
+		}
 
-	public void setX(double x) { this.x = x; }
-	public void setY(double y) { this.y = y; }
-	public void setVX(double vx) { this.vx = vx; }
-	public void setVY(double vy) { this.vy = vy; }
-	public void setLastUpdateTime(double lastUpdateTime) { this.lastUpdateTime = lastUpdateTime; }
-	public void setName(String name) { this.name = name; }
+		setPreferredSize(new Dimension(width, width));
+	}
 
 	@Override
-	public void resolveCollision(Collidable other, double time) {
-		if (other instanceof Particle) {
-			// Particle-particle collision
-			updateAfterCollision(time, (Particle) other);
-		} else if (other instanceof Wall) {
-			// Particle-wall collision
-			Wall wall = (Wall) other;
-			if (wall.getOrientation() == Wall.Orientation.VERTICAL) {
-				vx = -vx; // Invert horizontal velocity on vertical wall collision
-			} else if (wall.getOrientation() == Wall.Orientation.HORIZONTAL) {
-				vy = -vy; // Invert vertical velocity on horizontal wall collision
+	/**
+	 * Draws all the particles on the screen at their current locations
+	 * DO NOT MODIFY THIS METHOD
+	 */
+        public void paintComponent (Graphics g) {
+		g.clearRect(0, 0, width, width);
+		for (Collidable c : collidables) {
+			if(c instanceof Particle) {
+				((Particle) c).draw(g);
 			}
 		}
 	}
 
-
-	/**
-	 * Helper method to parse a string into a Particle.
-	 * DO NOT MODIFY THIS METHOD
-	 * @param str the string to parse
-	 * @return the parsed Particle
-	 */
-	public static Particle build (String str) {
-		String[] tokens = str.split("\\s+");
-		double[] nums = Arrays.stream(Arrays.copyOfRange(tokens, 1, tokens.length))
-				      .mapToDouble(Double::parseDouble)
-				      .toArray();
-		return new Particle(tokens[0], nums[0], nums[1], nums[2], nums[3], nums[4]);
+	// Helper class to signify the final event of the simulation.
+	private class TerminationEvent extends Event {
+		TerminationEvent (double timeOfEvent) {
+			super(timeOfEvent, 0);
+		}
 	}
 
 	/**
-	 * @name name of the particle (useful for debugging)
-	 * @param x x-coordinate of the particle
-	 * @param y y-coordinate of the particle
-	 * @param vx x-velocity of the particle
-	 * @param vy y-velocity of the particle
-	 * @param radius radius of the particle
+	 * Helper method to update the positions of all the particles based on their current velocities.
 	 */
-	Particle (String name, double x, double y, double vx, double vy, double radius) {
-		this.name = name;
-		this.x = x;
-		this.y = y;
-		this.vx = vx;
-		this.vy = vy;
-		this.radius = radius;
+	private void updateAllParticles(double delta) {
+		for (Collidable c : collidables) {
+			if (c instanceof Particle) {
+				((Particle) c).update(delta);
+			}
+		}
 	}
 
-	/**
-	 * Draws the particle as a filled circle.
-	 * DO NOT MODIFY THIS METHOD
-	 */
-	void draw (Graphics g) {
-		g.fillOval((int) (x - radius), (int) (y - radius), (int) (2*radius), (int) (2*radius));
+	/*
+	private void addCollisions(Particle p, double currentTime) {
+		for (Collidable other : collidables) {
+			if (other != p) {
+				double timeToCollision = calculateCollisionTime(p, other);
+				if (timeToCollision > 0) {
+					events.add(new Event(currentTime + timeToCollision, currentTime, p, other));
+				}
+			}
+		}
 	}
+	*/
 
 	/**
-	 * Useful for debugging.
+	 * Executes the actual simulation.
 	 */
-	public String toString () {
-		return (name.equals("") ? "" : name + " ") + x + "  " + y + " " + vx + " " + vy + " " + radius;
-	}
+	private void simulate (boolean show) {
+		double lastTime = 0;
 
-	/**
-	 * Updates the position of the particle after an elapsed amount of time, delta, using
-	 * the particle's current velocity.
-	 * @param delta the elapsed time since the last particle update
-	 */
-	public void update (double delta) {
-		double newX = x + delta * vx;
-		double newY = y + delta * vy;
-		x = newX;
-		y = newY;
-	}
+		// Create initial events, i.e., all the possible
+		// collisions between all the particles and each other,
+		// and all the particles and the walls.
 
-	/**
-	 * Updates both this particle's and another particle's velocities after a collision between them.
-	 * DO NOT CHANGE THE MATH IN THIS METHOD
-	 * @param now the current time in the simulation
-	 * @param other the particle that this one collided with
-	 */
-	private void updateAfterCollision (double now, Particle other) {
-		double vxPrime, vyPrime;
-		double otherVxPrime, otherVyPrime;
-		double common = ((this.vx - other.getVX()) * (this.x - other.getX()) +
-				 (this.vy - other.getVY()) * (this.y - other.getY())) /
-			     (Math.pow(this.x - other.getX(), 2) + Math.pow(this.y - other.getY(), 2));
-		vxPrime = this.vx - common * (this.x - other.getX());
-		vyPrime = this.vy - common * (this.y - other.getY());
-		otherVxPrime = other.getVX() - common * (other.getX() - this.x);
-		otherVyPrime = other.getVY() - common * (other.getY() - this.y);
+		// TODO add events here
 
-		this.vx = vxPrime;
-		this.vy = vyPrime;
-		other.setVX(otherVxPrime);
-		other.setVY(otherVyPrime);
+		/*
+		for (Particle p : particles) {
+			// Add new events.
+			// TODO: correct this its prob wrong
+			Particle next = findClosestCollision(p);
+			if(next != null) {
+				//System.out.println("i found a hit...");
+				events.add(new Event(p.getCollisionTime(next), lastTime, p, next));
+			}
+			//  add an event for the nearest colision of the currently inspected particle
+		}
+		*/
+		
+		events.add(new TerminationEvent(duration));
+		System.out.println(events.size() + " long");
+		while (events.size() > 0) {
+			System.out.println(events.size() + " long");
+			Event event = events.removeFirst();
+			double delta = event.getTimeOfEvent() - lastTime;
 
-		lastUpdateTime = now;
-		other.setLastUpdateTime(now);
-	}
+			if (event instanceof TerminationEvent) {
+				System.out.println("good bye!");
+				updateAllParticles(delta);
+				break;
+			}
 
-	/**
-	 * Computes and returns the time when (if ever) this particle will collide with another particle,
-	 * or infinity if the two particles will never collide given their current velocities.
-	 * DO NOT CHANGE THE MATH IN THIS METHOD
-	 * @param other the other particle to consider
-	 * @return the time with the particles will collide, or infinity if they will never collide
-	 */
-	public double getCollisionTime (Collidable other) {
-		// See https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
-		double a = this.vx - other.getVX();
-		double b = this.x - other.getX();
-		double c = this.vy - other.getVY();
-		double d = this.y - other.getY();
-		double r = this.radius;
+			// TODO: THIS
+			// Check if event still valid; if not, then skip this event
+			/*
+			Particle[] particles = event.getParticles();
+			boolean valid = lastTime >= particles[0].getLastUpdateTime() && lastTime >= particles[1].getLastUpdateTime();
+			if (!valid) {
+				continue;
+			}
 
-		double A = a*a + c*c;
-		double B = 2 * (a*b + c*d);
-		double C = b*b + d*d - 4*r*r;
+			if (valid) {
+				// Check if both particles have been updated until the event time.
+				double eventTime = event.getTimeOfEvent();
+				if (eventTime < lastTime) {
+					continue; // Skip the event if the particles have already been updated.
+				}
 
-		// Numerically more stable solution to QE.
-		// https://people.csail.mit.edu/bkph/articles/Quadratics.pdf
-		double t1, t2;
-		if (B >= 0) {
-			t1 = (-B - Math.sqrt(B*B - 4*A*C)) / (2*A);
-			t2 = 2*C / (-B - Math.sqrt(B*B - 4*A*C));
-		} else {
-			t1 = 2*C / (-B + Math.sqrt(B*B - 4*A*C));
-			t2 = (-B + Math.sqrt(B*B - 4*A*C)) / (2*A);
+				// Process the event here (e.g., collision, velocity update, etc.)
+				// Update particle states after collision.
+			}
+
+			COULD DO SOMETHING LIKE THIS
+
+		 	*/
+
+			// Since the event is valid, then pause the simulation for the right
+			// amount of time, and then update the screen.
+			if (valid) {
+				System.out.println("should show something");
+				try {
+					Thread.sleep((long) 10);
+				} catch (InterruptedException ie) { }
+			}
+
+			// Update positions of all particles
+			updateAllParticles(delta);
+
+			// Update the velocity of the particle(s) involved in the collision
+			// (either for a particle-wall collision or a particle-particle collision).
+			// You should call the Particle.updateAfterCollision method at some point.
+			particles[0].resolveCollision(particles[1], lastTime);
+			particles[1].resolveCollision(particles[0], lastTime);
+			// Enqueue new events for the particle(s) that were involved in this event.
+
+			System.out.println("adding");
+			Particle nextA = findClosestCollision(particles[0]);
+			Particle nextB = findClosestCollision(particles[1]);
+
+			if (nextA != null) {
+				events.add(new Event(particles[0].getCollisionTime(nextA), lastTime, particles[0], nextA));
+			}
+			if (nextB != null) {
+				events.add(new Event(particles[1].getCollisionTime(nextB), lastTime, particles[1], nextB));
+			}
+
+			// Update the time of our simulation
+			lastTime = event.getTimeOfEvent();
+
+			// Redraw the screen
+			if (valid) {
+				System.out.println("showing");
+				repaint();
+			}
 		}
 
-		// Require that the collision time be slightly larger than 0 to avoid
-		// numerical issues.
-		double SMALL = 1e-6;
-		double t;
-		if (t1 > SMALL && t2 > SMALL) {
-			t = Math.min(t1, t2);
-		} else if (t1 > SMALL) {
-			t = t1;
-		} else if (t2 > SMALL) {
-			t = t2;
-		} else {
-			// no collision
-			t = Double.POSITIVE_INFINITY;
+		// Print out the final state of the simulation
+		System.out.println(width);
+		System.out.println(duration);
+		//for (Particle p : particles) {
+		//	System.out.println(p);
+		//}
+	}
+
+	/**
+	 * Finds the closest Collidable that will collide with the given particle.
+	 * @param particle The particle to check.
+	 * @return The closest Collidable that will collide with the given particle.
+	 */
+	private Collidable findClosestCollision(Particle particle) {
+		Particle closestParticle = null;
+		double minTime = Double.POSITIVE_INFINITY;
+
+		for (Collidable other : collidables) {
+			/*
+			if (particle != other) {
+				double collisionTime = particle.getCollisionTime(other);
+				if (collisionTime < minTime && collisionTime > 0) {
+					minTime = collisionTime;
+					closestParticle = other;
+				}
+			}
+			*/
+		}
+		boolean found = (closestParticle != null);
+		//System.out.print("found");
+		//System.out.println(found ? " something!!!!!!!!!!!" : " nothing");
+		return closestParticle;
+	}
+
+	public static void main (String[] args) throws IOException {
+		if (args.length < 1) {
+			System.out.println("Usage: java ParticalSimulator <filename>");
+			System.exit(1);
 		}
 
-		return t;
+		ParticleSimulator simulator;
+
+		simulator = new ParticleSimulator(args[0]);
+		JFrame frame = new JFrame();
+		frame.setTitle("Particle Simulator");
+		frame.getContentPane().setLayout(new BorderLayout());
+		frame.getContentPane().add(simulator, BorderLayout.CENTER);
+		frame.setVisible(true);
+		frame.pack();
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		simulator.simulate(true);
 	}
 }

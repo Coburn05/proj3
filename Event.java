@@ -18,15 +18,28 @@ public class Event implements Comparable<Event> {
 		this.collidableB = collidableB;
 	}
 
+	public Event (double timeOfEvent, double timeEventCreated) {
+		this.timeOfEvent = timeOfEvent;
+		this.timeEventCreated = timeEventCreated;
+		this.collidableA = null;
+		this.collidableB = null;
+	}
+
+	public boolean isValid(double time) {
+		boolean status = time <= timeOfEvent;
+		// should check update time of particle(s) involved agaisn current time (passed in)
+		return status;
+	}
+
 	@Override
 	/**
 	 * Compares two Events based on their event times. Since you are implementing a maximum heap,
 	 * this method assumes that the event with the smaller event time should receive higher priority.
 	 */
 	public int compareTo (Event e) {
-		if (_timeOfEvent < e._timeOfEvent) {
+		if (timeOfEvent < e.timeOfEvent) {
 			return +1;
-		} else if (_timeOfEvent == e._timeOfEvent) {
+		} else if (timeOfEvent == e.timeOfEvent) {
 			return 0;
 		} else {
 			return -1;
@@ -37,8 +50,8 @@ public class Event implements Comparable<Event> {
 	 * gets both particles involved in colision
 	 * @return [particleA, particleB]
 	 */
-	public Particle[] getParticles() {
-		return new Particle[]{particleA, particleB};
+	public Collidable[] getCollidables() {
+		return new Collidable[]{collidableA, collidableB};
 	}
 
 	/**

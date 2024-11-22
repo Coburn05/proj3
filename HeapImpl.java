@@ -59,8 +59,8 @@ public class HeapImpl<T extends Comparable<? super T>> implements Heap<T> {
 
 	private void bubbleDown(int index) {
 		while (index < _numElements) {
-			int left = 2 * index + 1;
-			int right = 2 * index + 2;
+			int left = 2 * index;
+			int right = 2 * index + 1;
 			int largest = index;
 
 			if (left < _numElements && _storage[left].compareTo(_storage[largest]) > 0) {

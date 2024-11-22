@@ -1,26 +1,27 @@
 public class Wall implements Collidable {
-    public enum Orientation { VERTICAL, HORIZONTAL }
-    private Orientation orientation;
+    private boolean isVertical;
     private double position; // Position along the perpendicular axis
 
-    public Wall(Orientation orientation, double position) {
-        this.orientation = orientation;
+    public Wall(boolean orientation, double position) {
+        this.isVertical = orientation;
         this.position = position;
     }
 
-    public Orientation getOrientation() {
-        return orientation;
+    public boolean getIsVertical() {
+        return isVertical;
     }
 
     @Override
     public void resolveCollision(Collidable other, double time) {
         System.out.println("a wall was hit");
-        // Walls don't change state during collisions
+        // other should be a particle
+        // 2 walls cant collide, or well they shouldnt
+        ((Particle) other).resolveCollision(this, time);
     }
 
     @Override
     public double[] getPosition() {
-        return orientation == Orientation.VERTICAL ? new double[]{position, 0} : new double[]{0, position};
+        return isVertical ? new double[]{position, 0} : new double[]{0, position};
     }
 
     @Override

@@ -1,6 +1,5 @@
 public interface Collidable {
     void resolveCollision(Collidable other, double time);
-
     double[] getPosition();
     double[] getVelocity();
     default double getX() { return getPosition()[0]; }

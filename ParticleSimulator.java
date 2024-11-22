@@ -6,30 +6,34 @@ import java.io.*;
 import javax.sound.sampled.*;
 
 public class ParticleSimulator extends JPanel {
-	private Heap<Event> _events;
-	private java.util.List<Particle> _particles;
-	private double _duration;
-	private int _width;
+	private Heap<Event> events;
+	private java.util.List<Collidable> collidables;
+	private double duration;
+	private int width;
 
 	/**
 	 * @param filename the name of the file to parse containing the particles
 	 */
 	public ParticleSimulator (String filename) throws IOException {
-		_events = new HeapImpl<Event>();
+		events = new HeapImpl<Event>();
 
 		// Parse the specified file and load all the particles.
 		Scanner s = new Scanner(new File(filename));
-		_width = s.nextInt();
-		_duration = s.nextDouble();
+		width = s.nextInt();
+		duration = s.nextDouble();
 		s.nextLine();
-		_particles = new ArrayList<>();
+		collidables = new ArrayList<>();
 		while (s.hasNext()) {
 			String line = s.nextLine();
 			Particle particle = Particle.build(line);
-			_particles.add(particle);
+			collidables.add(particle);
 		}
+		collidables.add(new Wall(true, width));
+		collidables.add(new Wall(true, 0));
+		collidables.add(new Wall(false, width));
+		collidables.add(new Wall(false, 0));
 
-		setPreferredSize(new Dimension(_width, _width));
+		setPreferredSize(new Dimension(width, width));
 	}
 
 	@Override
@@ -38,9 +42,11 @@ public class ParticleSimulator extends JPanel {
 	 * DO NOT MODIFY THIS METHOD
 	 */
         public void paintComponent (Graphics g) {
-		g.clearRect(0, 0, _width, _width);
-		for (Particle p : _particles) {
-			p.draw(g);
+		g.clearRect(0, 0, width, width);
+		for (Collidable c : collidables) {
+			if(c instanceof Particle) {
+				((Particle) c).draw(g);
+			}
 		}
 	}
 
@@ -54,10 +60,11 @@ public class ParticleSimulator extends JPanel {
 	/**
 	 * Helper method to update the positions of all the particles based on their current velocities.
 	 */
-	private void updateAllParticles (double delta) {
-		System.out.println("making update");
-		for (Particle p : _particles) {
-			p.update(delta);
+	private void updateAllParticles(double delta) {
+		for (Collidable c : collidables) {
+			if (c instanceof Particle) {
+				((Particle) c).update(delta);
+			}
 		}
 	}
 
@@ -70,49 +77,39 @@ public class ParticleSimulator extends JPanel {
 		// Create initial events, i.e., all the possible
 		// collisions between all the particles and each other,
 		// and all the particles and the walls.
-		for (Particle p : _particles) {
-			System.out.println("HJKADHDSLSFLH");
+		for (Collidable c : collidables) {
 			// Add new events.
-			// TODO: correct this its prob wrong
-			Particle next = findClosestCollision(p);
-			if(next != null) {
-				System.out.println("i found a hit...");
-				_events.add(new Event(p.getCollisionTime(next), lastTime, p, next));
+			if (c instanceof Particle) {
+				Collidable other = findClosestCollision((Particle) c);
+				double timeOfEvent = ((Particle) c).collisionTime(other);
+				events.add(new Event(timeOfEvent, lastTime, c, other));
 			}
-			//  add an event for the nearest colision of the currently inspected particle
 		}
-		
-		_events.add(new TerminationEvent(_duration));
-		while (_events.size() > 0) {
-			Event event = _events.removeFirst();
-			double delta = event._timeOfEvent - lastTime;
+
+
+		events.add(new TerminationEvent(duration));
+		while (events.size() > 0) {
+			Event event = events.removeFirst();
+			double delta = event.getTimeOfEvent() - lastTime;
 
 			if (event instanceof TerminationEvent) {
-				System.out.println("good bye!");
 				updateAllParticles(delta);
 				break;
 			}
 
-			// TODO: THIS
 			// Check if event still valid; if not, then skip this event
-			Particle[] particles = event.getParticles();
-			boolean valid = particles[0].getLastUpdateTime() == particles[1].getLastUpdateTime() && lastTime == particles[1].getLastUpdateTime();
-			System.out.println(valid ? "valid" : "not valid");
-			if (!valid) {
-				System.out.println("im done here");
+			if(!event.isValid(lastTime)) {
 				continue;
 			}
 
-
 			// Since the event is valid, then pause the simulation for the right
 			// amount of time, and then update the screen.
-			if (valid) {
-				System.out.println("should show something");
-				particles[0].update()
+			if (show) {
+				Collidable[] currentCollidables = event.getCollidables();
+				currentCollidables[0].resolveCollision(currentCollidables[1], lastTime);
 				try {
-					Thread.sleep((long) 10);
-				} catch (InterruptedException ie) {
-				}
+					Thread.sleep((long) delta);
+				} catch (InterruptedException ie) {}
 			}
 
 			// Update positions of all particles
@@ -125,45 +122,43 @@ public class ParticleSimulator extends JPanel {
 			// Enqueue new events for the particle(s) that were involved in this event.
 
 			// Update the time of our simulation
-			lastTime = event._timeOfEvent;
+			lastTime = event.getTimeOfEvent();
 
 			// Redraw the screen
-			if (true) {
-				System.out.println("showing");
+			if (show) {
 				repaint();
 			}
 		}
 
 		// Print out the final state of the simulation
-		System.out.println(_width);
-		System.out.println(_duration);
-		for (Particle p : _particles) {
-			System.out.println(p);
+		System.out.println(width);
+		System.out.println(duration);
+		for (Collidable c : collidables) {
+			if(c instanceof Particle) {
+				System.out.println((Particle) c);
+			}
 		}
 	}
 
 	/**
-	 * Finds the closest particle that will collide with the given particle.
+	 * Finds the closest Collidable that will collide with the given particle.
 	 * @param particle The particle to check.
-	 * @return The closest particle that will collide with the given particle.
+	 * @return The closest Collidable that will collide with the given particle.
 	 */
-	private Particle findClosestCollision(Particle particle) {
-		Particle closestParticle = null;
+	private Collidable findClosestCollision(Particle particle) {
+		Collidable closestCollidable = null;
+
 		double minTime = Double.POSITIVE_INFINITY;
 
-		for (Particle other : _particles) {
-			if (particle != other) {
-				double collisionTime = particle.getCollisionTime(other);
-				if (collisionTime < minTime && collisionTime > 0) {
-					minTime = collisionTime;
-					closestParticle = other;
-				}
+		for (Collidable other : collidables) {
+
+			double thisCollisionTime = particle.collisionTime(other);
+			if (thisCollisionTime < minTime && thisCollisionTime > 0) {
+				minTime = thisCollisionTime;
+				closestCollidable = other;
 			}
 		}
-		boolean found = (closestParticle != null);
-		System.out.print("I was called and found");
-		System.out.println(found ? " something!!!!!!!!!!!" : " nothing");
-		return closestParticle;
+		return closestCollidable;
 	}
 
 	public static void main (String[] args) throws IOException {

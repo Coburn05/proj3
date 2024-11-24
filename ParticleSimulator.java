@@ -41,10 +41,10 @@ public class ParticleSimulator extends JPanel {
 	 * Draws all the particles on the screen at their current locations
 	 * DO NOT MODIFY THIS METHOD
 	 */
-        public void paintComponent (Graphics g) {
+	public void paintComponent (Graphics g) {
 		g.clearRect(0, 0, width, width);
 		for (Collidable c : collidables) {
-			if(c instanceof Particle) {
+			if (c instanceof Particle) {
 				((Particle) c).draw(g);
 			}
 		}
@@ -81,14 +81,20 @@ public class ParticleSimulator extends JPanel {
 			// Add new events.
 			if (c instanceof Particle) {
 				Collidable other = findClosestCollision((Particle) c);
-				double timeOfEvent = ((Particle) c).collisionTime(other);
-				events.add(new Event(timeOfEvent, lastTime, c, other));
+				if(other != null) {
+					double timeOfEvent = ((Particle) c).collisionTime(other);
+					events.add(new Event(timeOfEvent, lastTime, c, other));
+				} else {
+					System.out.println("Particle is null");
+				}
 			}
 		}
 
 
 		events.add(new TerminationEvent(duration));
 		while (events.size() > 0) {
+			System.out.println("Event list is " + events.size() + " long");
+
 			Event event = events.removeFirst();
 			double delta = event.getTimeOfEvent() - lastTime;
 
@@ -99,16 +105,19 @@ public class ParticleSimulator extends JPanel {
 
 			// Check if event still valid; if not, then skip this event
 			if(!event.isValid(lastTime)) {
+				System.out.println("event not valid");
 				continue;
 			}
 
 			// Since the event is valid, then pause the simulation for the right
 			// amount of time, and then update the screen.
+			Collidable[] currentCollidables = new Collidable[2];
 			if (show) {
-				Collidable[] currentCollidables = event.getCollidables();
+				currentCollidables = event.getCollidables();
 				currentCollidables[0].resolveCollision(currentCollidables[1], lastTime);
 				try {
-					Thread.sleep((long) delta);
+					System.out.println(delta);
+					Thread.sleep((long) delta * 10);
 				} catch (InterruptedException ie) {}
 			}
 
@@ -120,12 +129,17 @@ public class ParticleSimulator extends JPanel {
 			// You should call the Particle.updateAfterCollision method at some point.
 
 			// Enqueue new events for the particle(s) that were involved in this event.
+			if(currentCollidables != null) {
+				enqueueNewEvents(currentCollidables[0], lastTime);
+				enqueueNewEvents(currentCollidables[1], lastTime);
+			}
 
 			// Update the time of our simulation
 			lastTime = event.getTimeOfEvent();
 
 			// Redraw the screen
 			if (show) {
+				System.out.println("paint");
 				repaint();
 			}
 		}
@@ -140,6 +154,19 @@ public class ParticleSimulator extends JPanel {
 		}
 	}
 
+	private void enqueueNewEvents(Collidable particle, double currentTime) {
+		if (particle instanceof Particle) {
+			Collidable closest = findClosestCollision((Particle) particle);
+			if (closest != null) {
+				double collisionTime = ((Particle) particle).collisionTime(closest);
+				if (collisionTime > currentTime) {
+					events.add(new Event(collisionTime, currentTime, particle, closest));
+				}
+			}
+		}
+	}
+
+
 	/**
 	 * Finds the closest Collidable that will collide with the given particle.
 	 * @param particle The particle to check.
@@ -147,19 +174,20 @@ public class ParticleSimulator extends JPanel {
 	 */
 	private Collidable findClosestCollision(Particle particle) {
 		Collidable closestCollidable = null;
-
 		double minTime = Double.POSITIVE_INFINITY;
 
 		for (Collidable other : collidables) {
-
-			double thisCollisionTime = particle.collisionTime(other);
-			if (thisCollisionTime < minTime && thisCollisionTime > 0) {
-				minTime = thisCollisionTime;
-				closestCollidable = other;
+			if (other != particle) { // Avoid checking self-collisions
+				double thisCollisionTime = particle.collisionTime(other);
+				if (thisCollisionTime < minTime && thisCollisionTime > 0) {
+					minTime = thisCollisionTime;
+					closestCollidable = other;
+				}
 			}
 		}
 		return closestCollidable;
 	}
+
 
 	public static void main (String[] args) throws IOException {
 		if (args.length < 1) {

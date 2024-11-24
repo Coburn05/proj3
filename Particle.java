@@ -42,7 +42,6 @@ public class Particle implements Collidable {
 		}
 	}
 
-
 	/**
 	 * Helper method to parse a string into a Particle.
 	 * DO NOT MODIFY THIS METHOD

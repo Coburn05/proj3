@@ -13,11 +13,15 @@ public class Wall implements Collidable {
 
     @Override
     public void resolveCollision(Collidable other, double time) {
-        System.out.println("a wall was hit");
-        // other should be a particle
-        // 2 walls cant collide, or well they shouldnt
-        ((Particle) other).resolveCollision(this, time);
+        if (other instanceof Particle) {
+            System.out.println("Wall was hit by a particle");
+            ((Particle) other).resolveCollision(this, time);
+        } else {
+            // Handle collision with other types (e.g., other walls)
+            System.out.println("Wall collision with a non-particle.");
+        }
     }
+
 
     @Override
     public double[] getPosition() {

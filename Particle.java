@@ -215,7 +215,7 @@ public class Particle extends Collideable {
 	}
 
 	/**
-	 * checks if the passed in tiem indicates a valid time
+	 * checks if the passed in time indicates is a valid time that an event for this particle can occur
 	 * @param lastTime, double for the time we want to check
 	 * @return boolean, if lastTime is greater than or equal to _lastUpdateTime
 	 */

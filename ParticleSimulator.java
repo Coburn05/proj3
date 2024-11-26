@@ -40,11 +40,11 @@ public class ParticleSimulator extends JPanel {
 			_particles.add(particle);
 		}
 		double curColorVal = 0;
-		final double colorValIncrement = 2 * Math.PI / _particles.size();
+		final double colorValIncrement = 2 * Math.PI / _particles.size(); //make sure each particle's color is unique, after all particles are done, goes around color wheel once
 		for (int i = 0; i < _particles.size(); i++) {
-			int r = 128 + (int) Math.floor(127 * Math.cos(curColorVal));
-			int g = 128 + (int) Math.floor(127 * Math.cos(curColorVal + 2 * Math.PI / 3));
-			int b = 128 + (int) Math.floor(127 * Math.cos(curColorVal + 4 * Math.PI / 3));
+			int r = 128 + (int) Math.floor(127 * Math.cos(curColorVal)); //red value
+			int g = 128 + (int) Math.floor(127 * Math.cos(curColorVal + 2 * Math.PI / 3)); //green value 1/3 of the way ahead of red value on wheel
+			int b = 128 + (int) Math.floor(127 * Math.cos(curColorVal + 4 * Math.PI / 3)); //blue value 2/3 of the way ahead of red value on color wheel
 			_particles.get(i).setColor(new Color(r, g, b));
 			curColorVal -= colorValIncrement;
 		}

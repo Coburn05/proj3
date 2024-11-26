@@ -1,13 +1,13 @@
 import java.awt.*;
 import java.util.*;
 
-public class Particle extends WallOrParticle {
+public class Particle extends CollideableBehaviorManager {
 	private String _name;
 	private double _x, _y;
 	private double _vx, _vy;
 	private double _radius;
 	private double _lastUpdateTime;
-
+	private Color _color;
 	/**
 	 * Helper method to parse a string into a Particle.
 	 * DO NOT MODIFY THIS METHOD
@@ -37,6 +37,7 @@ public class Particle extends WallOrParticle {
 		_vx = vx;
 		_vy = vy;
 		_radius = radius;
+		_color = Color.BLACK;
 	}
 
 	/**
@@ -44,9 +45,13 @@ public class Particle extends WallOrParticle {
 	 * DO NOT MODIFY THIS METHOD
 	 */
 	public void draw (Graphics g) {
+		g.setColor(_color);
 		g.fillOval((int) (_x - _radius), (int) (_y - _radius), (int) (2*_radius), (int) (2*_radius));
 	}
 
+	public void setColor (Color c) {
+		_color = c;
+	}
 	/**
 	 * Useful for debugging.
 	 */
@@ -99,8 +104,8 @@ public class Particle extends WallOrParticle {
 	 * @return
 	 */
 	protected void updateAfterCollision(double now, Wall other) {
-		_vx = -_vx;
-		_vy = -_vy;
+		if (other.isVertical()) _vx = -_vx;
+		else _vy = -_vy;
 		_lastUpdateTime = now;
 	}
 
@@ -155,6 +160,7 @@ public class Particle extends WallOrParticle {
 	}
 
 	protected double getCollisionTime(Wall other) {
+
 		if (other.isVertical()) {
 			double leftSideTime = (other.getX() - _x - _radius)/_vx;
 			double rightSideTime = (other.getX() - _x + _radius)/_vx;
@@ -179,6 +185,6 @@ public class Particle extends WallOrParticle {
 		return _y;
 	}
 	public boolean lastUpdateTimeMatch(double lastTime) {
-		return lastTime == _lastUpdateTime;
+		return lastTime >= _lastUpdateTime;
 	}
 }

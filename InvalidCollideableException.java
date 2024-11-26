@@ -1,5 +1,5 @@
 public class InvalidCollideableException extends RuntimeException {
-    public InvalidCollideableException() {
-        super("Collideable must either be a Wall or a Particle");
+    public InvalidCollideableException(Collideable c) {
+        super("Behavior for " + c.getClass().getName() + " undefined");
     }
 }

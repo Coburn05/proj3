@@ -1,6 +1,6 @@
 import javax.management.RuntimeErrorException;
 
-public class Wall extends WallOrParticle {
+public class Wall extends CollideableBehaviorManager {
     private boolean _isVertical;
     private double _x, _y;
 

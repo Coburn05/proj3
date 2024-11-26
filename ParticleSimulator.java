@@ -28,7 +28,7 @@ public class ParticleSimulator extends JPanel {
 		Wall top = new Wall(false, 0, 0);
 		Wall bottom = new Wall(false, 0, _width);
 		Wall left = new Wall(true, 0, 0);
-		Wall right = new Wall(true, 0, _width);
+		Wall right = new Wall(true, _width, 0);
 		_walls.add(top);
 		_walls.add(bottom);
 		_walls.add(left);
@@ -37,6 +37,15 @@ public class ParticleSimulator extends JPanel {
 			String line = s.nextLine();
 			Particle particle = Particle.build(line);
 			_particles.add(particle);
+		}
+		double curColorVal = 0;
+		final double colorValIncrement = 2 * Math.PI / _particles.size();
+		for (int i = 0; i < _particles.size(); i++) {
+			int r = 128 + (int) Math.floor(127*Math.cos(curColorVal));
+			int g = 128 + (int) Math.floor(127*Math.cos(curColorVal + 2 * Math.PI / 3));
+			int b = 128 + (int) Math.floor(127*Math.cos(curColorVal + 4 * Math.PI / 3));
+			_particles.get(i).setColor(new Color(r, g, b));
+			curColorVal -= colorValIncrement;
 		}
 		_collideables = new ArrayList<Collideable>(_walls);
 		_collideables.addAll(_particles);
@@ -118,11 +127,11 @@ public class ParticleSimulator extends JPanel {
 				try {
 					Thread.sleep((long) (delta*100));
 				} catch (InterruptedException ie) {}
+
 			}
 
 			// Update positions of all particles
 			updateAllParticles(delta);
-
 			// Update the velocity of the particle(s) involved in the collision
 			// (either for a particle-wall collision or a particle-particle collision).
 			// You should call the Particle.updateAfterCollision method at some point.
@@ -134,6 +143,7 @@ public class ParticleSimulator extends JPanel {
 			// Enqueue new events for the particle(s) that were involved in this event.
 			addAllCollisions(lastTime, event.getA());
 			addAllCollisions(lastTime, event.getB());
+
 
 			// Redraw the screen
 			if (show) {

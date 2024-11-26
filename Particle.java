@@ -1,7 +1,7 @@
 import java.awt.*;
 import java.util.*;
 
-public class Particle extends CollideableBehaviorManager {
+public class Particle extends Collideable {
 	private String _name;
 	private double _x, _y;
 	private double _vx, _vy;
@@ -160,7 +160,6 @@ public class Particle extends CollideableBehaviorManager {
 	}
 
 	protected double getCollisionTime(Wall other) {
-
 		if (other.isVertical()) {
 			double leftSideTime = (other.getX() - _x - _radius)/_vx;
 			double rightSideTime = (other.getX() - _x + _radius)/_vx;

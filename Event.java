@@ -30,7 +30,7 @@ public class Event implements Comparable<Event> {
 		return _item_a.lastUpdateTimeMatch(_timeEventCreated) && _item_b.lastUpdateTimeMatch(_timeEventCreated);
 	}
 
-	public void resolve() {
+	public void resolveCollision() {
 		_item_a.updateAfterCollision(_timeOfEvent, _item_b);
 	}
 	public Collideable getA() {

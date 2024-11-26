@@ -85,8 +85,8 @@ public class ParticleSimulator extends JPanel {
 		for (Collideable c2 : _collideables) {
 			if (c1 == c2) continue;
 			double collisionTime = c1.getCollisionTime(c2);
-			double absoluteTime = collisionTime + curTime;
 			if (collisionTime < Double.POSITIVE_INFINITY) {
+				double absoluteTime = collisionTime + curTime;
 				_events.add(new Event(absoluteTime, curTime, c1, c2));
 			}
 		}
@@ -135,7 +135,7 @@ public class ParticleSimulator extends JPanel {
 			// Update the velocity of the particle(s) involved in the collision
 			// (either for a particle-wall collision or a particle-particle collision).
 			// You should call the Particle.updateAfterCollision method at some point.
-			event.resolve();
+			event.resolveCollision();
 
 			// Update the time of our simulation
 			lastTime = event.getTimeOf();

@@ -40,11 +40,11 @@ public class ParticleSimulator extends JPanel {
 			_particles.add(particle);
 		}
 		double curColorVal = 0;
-		final double colorValIncrement = 2 * Math.PI / _particles.size();
+		final double colorValIncrement = 2 * Math.PI / _particles.size(); //make sure each particle's color is unique, after all particles are done, goes around color wheel once
 		for (int i = 0; i < _particles.size(); i++) {
-			int r = 128 + (int) Math.floor(127 * Math.cos(curColorVal));
-			int g = 128 + (int) Math.floor(127 * Math.cos(curColorVal + 2 * Math.PI / 3));
-			int b = 128 + (int) Math.floor(127 * Math.cos(curColorVal + 4 * Math.PI / 3));
+			int r = 128 + (int) Math.floor(127 * Math.cos(curColorVal)); //red value
+			int g = 128 + (int) Math.floor(127 * Math.cos(curColorVal + 2 * Math.PI / 3)); //green value 1/3 of the way ahead of red value on wheel
+			int b = 128 + (int) Math.floor(127 * Math.cos(curColorVal + 4 * Math.PI / 3)); //blue value 2/3 of the way ahead of red value on color wheel
 			_particles.get(i).setColor(new Color(r, g, b));
 			curColorVal -= colorValIncrement;
 		}
@@ -112,9 +112,8 @@ public class ParticleSimulator extends JPanel {
 		// Create initial events, i.e., all the possible
 		// collisions between all the particles and each other,
 		// and all the particles and the walls.
-		for (Particle p : _particles) {
+		for (Particle p : _particles)
 			addAllCollisions(lastTime, p);
-		}
 
 		_events.add(new TerminationEvent(_duration));
 		while (_events.size() > 0) {
@@ -127,19 +126,15 @@ public class ParticleSimulator extends JPanel {
 			}
 
 			// Check if event still valid; if not, then skip this event
-			if (!event.isValid()) {
+			if (!event.isValid())
 				continue;
-			}
-
 
 			// Since the event is valid, then pause the simulation for the right
 			// amount of time, and then update the screen.
 			if (show) {
 				try {
 					Thread.sleep((long) (delta * 100));
-				} catch (InterruptedException ie) {
-				}
-
+				} catch (InterruptedException ie) { }
 			}
 
 			// Update positions of all particles
@@ -156,11 +151,9 @@ public class ParticleSimulator extends JPanel {
 			addAllCollisions(lastTime, event.getA());
 			addAllCollisions(lastTime, event.getB());
 
-
 			// Redraw the screen
-			if (show) {
+			if (show)
 				repaint();
-			}
 		}
 
 		// Print out the final state of the simulation

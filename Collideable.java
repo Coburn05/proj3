@@ -1,8 +1,24 @@
 public abstract class Collideable {
-  public abstract void update(double lastTime);
+  /**
+   * update position of the particle based on the time elapsed
+   * @param delta time elapsed
+   */
+  public abstract void update(double delta);
+  /**
+   * @return x velocity of the collideable
+   */
   public abstract double getVX();
+  /**
+   * @return y velocity of the collideable
+   */
   public abstract double getVY();
+  /**
+   * @return x position of the collideable
+   */
   public abstract double getX();
+  /**
+   * @return y position of collideable
+   */
   public abstract double getY();
 
   /**
@@ -16,8 +32,8 @@ public abstract class Collideable {
    * updates particles involved in the collision
    * @param now, double for the current time
    * @param other, other Collideable involved in the event
-   * @throws InvalidCollideableException
-   * @throws WallCollisionException
+   * @throws InvalidCollideableException if the update behavior for the collision is undefined
+   * @throws WallCollisionException if two immovable walls somehow collide
    */
   public void updateAfterCollision(double now, Collideable other) throws InvalidCollideableException, WallCollisionException {
     if (other instanceof Particle) {
@@ -28,24 +44,24 @@ public abstract class Collideable {
   }
 
   /**
-   *
-   * @param now
-   * @param other
+   * collision behavior after the collideable collides with a particle
+   * @param now the time of collision
+   * @param other the particle thats being collided with
    */
   protected abstract void updateAfterCollision(double now, Particle other);
 
   /**
-   *
-   * @param now
-   * @param other
+   * collision behavior after the collideable collides with a wall
+   * @param now the time of collision
+   * @param other the wall thats being collided with
    */
   protected abstract void updateAfterCollision(double now, Wall other);
 
   /**
-   *
-   * @param other
-   * @return
-   * @throws InvalidCollideableException
+   * general retrieval of a collision between two collideables
+   * @param other the other collideable
+   * @return time taken until collision
+   * @throws InvalidCollideableException if the collision between the two is undefined
    */
   public double getCollisionTime (Collideable other) throws InvalidCollideableException {
     if (other instanceof Particle) {
@@ -56,26 +72,28 @@ public abstract class Collideable {
   }
 
   /**
-   *
+   * get collision time between this collideable and a particle
    * @param other
-   * @return
+   * @return time taken until collision
    */
   protected abstract double getCollisionTime (Particle other);
 
   /**
-   *
+   * get collision time between this collideable and a wall
    * @param other
-   * @return
+   * @return time taken until collision
    */
   protected abstract double getCollisionTime (Wall other);
 }
 
+/**
+ * error caused when a collision between two collideables is not defined
+ */
 class InvalidCollideableException extends RuntimeException {
 
   /**
-   *
-   * @param c
-   * @param other
+   * @param c the first collideable 
+   * @param other the other collideable the has an undefined collision with c
    */
   public InvalidCollideableException(Collideable c, Collideable other) {
       super("The collision between " + c.getClass().getName() + " and " + other.getClass().getName() + " undefined");

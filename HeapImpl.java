@@ -23,6 +23,7 @@ public class HeapImpl<T extends Comparable<? super T>> implements Heap<T> {
 		if (_numElements == _values.length -1) resizeUp();
 		_values[_numElements] = data;
 		int curIndex = _numElements;
+		//bubbles up while the heap is invalid
 		while (_values[curIndex].compareTo(_values[(curIndex - 1) / 2]) > 0) {
 			swap(curIndex, (curIndex - 1)/2);
 			curIndex = (curIndex - 1)/2;
@@ -35,9 +36,11 @@ public class HeapImpl<T extends Comparable<? super T>> implements Heap<T> {
 	 * @return root value
 	 */
 	public T removeFirst() {
+        if (_numElements == 0) return null;
 		T removed = _values[0];
 		_values[0] = _values[--_numElements];
 		int curIndex = 0;
+		//while element is not a leaf node or is outside of array bounds bubbles down
 		while (!isLeaf(curIndex)) {
 			T at = _values[curIndex];
 			T left = _values[2*curIndex + 1];

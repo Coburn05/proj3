@@ -1,5 +1,3 @@
-import javax.management.RuntimeErrorException;
-
 public class Wall extends Collideable {
     private boolean _isVertical;
     private double _x, _y;
@@ -103,18 +101,20 @@ public class Wall extends Collideable {
     /**
      * get position in the x direction
      * @return position in the x direction
+     * @throws WrongOrientationException if the wall is horizontal and exists at every x value
      */
-	public double getX() {
-        if (!_isVertical) throw new RuntimeException("Cannot access x attribute of a horizontal wall");
+	public double getX() throws WrongOrientationException {
+        if (!_isVertical) throw new WrongOrientationException(_isVertical);
 		return _x;
 	}
 
     /**
      * get position in the x direction
      * @return position in the x direction
+     * @throws WrongOrientationException if the wall is vertical and exists at every y value
      */
-	public double getY() {
-        if (_isVertical) throw new RuntimeException("Cannot access y attribute of a vertical wall");
+	public double getY() throws WrongOrientationException {
+        if (_isVertical) throw new WrongOrientationException(_isVertical);
 		return _y;
 	}
 
@@ -135,3 +135,12 @@ public class Wall extends Collideable {
         return _isVertical;
     }
 }
+
+/**
+ * Error that occurs when an invalid attribute of a wall is accessed
+ */
+class WrongOrientationException extends RuntimeException {
+    public WrongOrientationException(boolean isVertical) {
+        super("Cannot access " + (isVertical ? "y" : "x") + " attribute of a " + (isVertical ? "vertical" : "horizontal") + " wall");
+    }
+ }

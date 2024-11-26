@@ -12,10 +12,11 @@ public class ParticleSimulator extends JPanel {
 	private double _duration;
 	private int _width;
 	private java.util.List<Collideable> _collideables;
+
 	/**
 	 * @param filename the name of the file to parse containing the particles
 	 */
-	public ParticleSimulator (String filename) throws IOException {
+	public ParticleSimulator(String filename) throws IOException {
 		_events = new HeapImpl<>();
 
 		// Parse the specified file and load all the particles.
@@ -41,9 +42,9 @@ public class ParticleSimulator extends JPanel {
 		double curColorVal = 0;
 		final double colorValIncrement = 2 * Math.PI / _particles.size();
 		for (int i = 0; i < _particles.size(); i++) {
-			int r = 128 + (int) Math.floor(127*Math.cos(curColorVal));
-			int g = 128 + (int) Math.floor(127*Math.cos(curColorVal + 2 * Math.PI / 3));
-			int b = 128 + (int) Math.floor(127*Math.cos(curColorVal + 4 * Math.PI / 3));
+			int r = 128 + (int) Math.floor(127 * Math.cos(curColorVal));
+			int g = 128 + (int) Math.floor(127 * Math.cos(curColorVal + 2 * Math.PI / 3));
+			int b = 128 + (int) Math.floor(127 * Math.cos(curColorVal + 4 * Math.PI / 3));
 			_particles.get(i).setColor(new Color(r, g, b));
 			curColorVal -= colorValIncrement;
 		}
@@ -57,7 +58,7 @@ public class ParticleSimulator extends JPanel {
 	 * Draws all the particles on the screen at their current locations
 	 * DO NOT MODIFY THIS METHOD
 	 */
-        public void paintComponent (Graphics g) {
+	public void paintComponent(Graphics g) {
 		g.clearRect(0, 0, _width, _width);
 		for (Particle p : _particles) {
 			p.draw(g);
@@ -66,20 +67,27 @@ public class ParticleSimulator extends JPanel {
 
 	// Helper class to signify the final event of the simulation.
 	private class TerminationEvent extends Event {
-		TerminationEvent (double timeOfEvent) {
+		TerminationEvent(double timeOfEvent) {
 			super(timeOfEvent, 0);
 		}
 	}
 
 	/**
-	 * Helper method to update the positions of all the particles based on their current velocities.
+	 * @param delta, double value for the amount of time passed
 	 */
-	private void updateAllParticles (double delta) {
+	private void updateAllParticles(double delta) {
 		for (Collideable p : _particles) {
 			p.update(delta);
 		}
 	}
 
+	/**
+	 * adds all collisions to the _events list for a given partile
+	 *
+	 * @param curTime, current time of the simulation
+	 * @param c1,      collidable whos collidions will be added
+	 * @return void
+	 */
 	private void addAllCollisions(double curTime, Collideable c1) {
 
 		for (Collideable c2 : _collideables) {
@@ -94,8 +102,11 @@ public class ParticleSimulator extends JPanel {
 
 	/**
 	 * Executes the actual simulation.
+	 *
+	 * @param show, if this simulation should be put on screen
+	 * @return void
 	 */
-	private void simulate (boolean show) {
+	private void simulate(boolean show) {
 		double lastTime = 0;
 
 		// Create initial events, i.e., all the possible
@@ -104,7 +115,7 @@ public class ParticleSimulator extends JPanel {
 		for (Particle p : _particles) {
 			addAllCollisions(lastTime, p);
 		}
-		
+
 		_events.add(new TerminationEvent(_duration));
 		while (_events.size() > 0) {
 			Event event = _events.removeFirst();
@@ -125,8 +136,9 @@ public class ParticleSimulator extends JPanel {
 			// amount of time, and then update the screen.
 			if (show) {
 				try {
-					Thread.sleep((long) (delta*100));
-				} catch (InterruptedException ie) {}
+					Thread.sleep((long) (delta * 100));
+				} catch (InterruptedException ie) {
+				}
 
 			}
 
@@ -159,7 +171,7 @@ public class ParticleSimulator extends JPanel {
 		}
 	}
 
-	public static void main (String[] args) throws IOException {
+	public static void main(String[] args) throws IOException {
 		if (args.length < 1) {
 			System.out.println("Usage: java ParticalSimulator <filename>");
 			System.exit(1);

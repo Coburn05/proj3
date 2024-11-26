@@ -8,6 +8,7 @@ public class Particle extends Collideable {
 	private double _radius;
 	private double _lastUpdateTime;
 	private Color _color;
+
 	/**
 	 * Helper method to parse a string into a Particle.
 	 * DO NOT MODIFY THIS METHOD
@@ -49,9 +50,14 @@ public class Particle extends Collideable {
 		g.fillOval((int) (_x - _radius), (int) (_y - _radius), (int) (2*_radius), (int) (2*_radius));
 	}
 
+	/**
+	 * sets the color of the particle, makes it easy to track particles in the simulation
+	 * @param c, color that the particle should take
+	 */
 	public void setColor (Color c) {
 		_color = c;
 	}
+
 	/**
 	 * Useful for debugging.
 	 */
@@ -99,17 +105,16 @@ public class Particle extends Collideable {
 	}
 
 	/**
-	 * 
-	 * @param other
-	 * @return
+	 * updates particle velocities and _lastUpdateTime after a wall collision
+	 * @param now, double for the current time
+	 * @param other, Wall that the particle has collided with
+	 * @return void
 	 */
 	protected void updateAfterCollision(double now, Wall other) {
 		if (other.isVertical()) _vx = -_vx;
 		else _vy = -_vy;
 		_lastUpdateTime = now;
 	}
-
-	
 
 	/**
 	 * Computes and returns the time when (if ever) this particle will collide with another particle,
@@ -159,6 +164,11 @@ public class Particle extends Collideable {
 		return t;
 	}
 
+	/**
+	 * gets how long untill we collide with the specified wall
+	 * @param other, the Wall we are finding collision time for
+	 * @return double, time untill the collision happens
+	 */
 	protected double getCollisionTime(Wall other) {
 		if (other.isVertical()) {
 			double leftSideTime = (other.getX() - _x - _radius)/_vx;
@@ -171,18 +181,44 @@ public class Particle extends Collideable {
 		}
 		return Double.POSITIVE_INFINITY;
 	}
+
+	/**
+	 * gets the velocity in the x direction
+	 * @return double, velocity in the x direction
+	 */
 	public double getVX() {
 		return _vx;
 	}
+
+	/**
+	 * gets the velocity in the y direction
+	 * @return double, velocity in the y direction
+	 */
 	public double getVY() {
 		return _vy;
 	}
+
+	/**
+	 * gets the x position
+	 * @return y, double for the location in the x direction
+	 */
 	public double getX() {
 		return _x;
 	}
+
+	/**
+	 * gets the y position
+	 * @return y, double for the location in the y direction
+	 */
 	public double getY() {
 		return _y;
 	}
+
+	/**
+	 * checks if the passed in tiem indicates a valid time
+	 * @param lastTime, double for the time we want to check
+	 * @return boolean, if lastTime is greater than or equal to _lastUpdateTime
+	 */
 	public boolean lastUpdateTimeMatch(double lastTime) {
 		return lastTime >= _lastUpdateTime;
 	}

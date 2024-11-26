@@ -4,12 +4,21 @@ public class HeapImpl<T extends Comparable<? super T>> implements Heap<T> {
 	private int _numElements;
 
 	@SuppressWarnings("unchecked")
+	/**
+	 * constructor for the heap, starts with an initial length of INITIAL_CAPACITY
+	 * @return heap
+	 */
 	public HeapImpl() {
 		_values = (T[]) new Comparable[INITIAL_CAPACITY];
 		_numElements = 0;
 	}
 
 	@SuppressWarnings("unchecked")
+	/**
+	 * adds a new value to the heap
+	 * @param data, this is the data that the node should store
+	 * @return void
+	 */
 	public void add(T data) {
 		if (_numElements == _values.length -1) resizeUp();
 		_values[_numElements] = data;
@@ -21,6 +30,10 @@ public class HeapImpl<T extends Comparable<? super T>> implements Heap<T> {
 		_numElements++;
 	}
 
+	/**
+	 * removes the root value of the entire heap
+	 * @return root value
+	 */
 	public T removeFirst() {
 		T removed = _values[0];
 		_values[0] = _values[--_numElements];
@@ -43,15 +56,28 @@ public class HeapImpl<T extends Comparable<? super T>> implements Heap<T> {
 		}
 		return removed;
 	}
+
+	/**
+	 * checks if the value at the given index a leaf
+	 * @param index, index to check for being a leaf
+	 * @return boolean, is the value at the given index a leaf
+	 */
 	private boolean isLeaf (int index) {
 		return (index >= _numElements/2);
 	}
 
-
-
+	/**
+	 * gets the size of the heap
+	 * @return int, number of elements in the heap
+	 */
 	public int size() {
 		return _numElements;
 	}
+
+	/**
+	 * doubles the size of the heap in memeory
+	 * @return void
+	 */
 	private void resizeUp () {
 		T[] _valuesTemp = (T[]) new Comparable[_numElements*2];
 		for (int i = 0; i < _values.length; i++) {
@@ -59,6 +85,13 @@ public class HeapImpl<T extends Comparable<? super T>> implements Heap<T> {
 		}
 		_values = _valuesTemp;
 	}
+
+	/**
+	 * swaps i and j in the heap
+	 * @param i
+	 * @param j
+	 * @return void
+	 */
 	private void swap (int i, int j) {
 		T temp = _values[i];
 		_values[i] = _values[j];

@@ -35,6 +35,7 @@ public class HeapImpl<T extends Comparable<? super T>> implements Heap<T> {
 	 * @return root value
 	 */
 	public T removeFirst() {
+        if (_numElements == 0) return null;
 		T removed = _values[0];
 		_values[0] = _values[--_numElements];
 		int curIndex = 0;

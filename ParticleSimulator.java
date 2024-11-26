@@ -112,9 +112,8 @@ public class ParticleSimulator extends JPanel {
 		// Create initial events, i.e., all the possible
 		// collisions between all the particles and each other,
 		// and all the particles and the walls.
-		for (Particle p : _particles) {
+		for (Particle p : _particles)
 			addAllCollisions(lastTime, p);
-		}
 
 		_events.add(new TerminationEvent(_duration));
 		while (_events.size() > 0) {
@@ -127,19 +126,15 @@ public class ParticleSimulator extends JPanel {
 			}
 
 			// Check if event still valid; if not, then skip this event
-			if (!event.isValid()) {
+			if (!event.isValid())
 				continue;
-			}
-
 
 			// Since the event is valid, then pause the simulation for the right
 			// amount of time, and then update the screen.
 			if (show) {
 				try {
 					Thread.sleep((long) (delta * 100));
-				} catch (InterruptedException ie) {
-				}
-
+				} catch (InterruptedException ie) { }
 			}
 
 			// Update positions of all particles
@@ -156,11 +151,9 @@ public class ParticleSimulator extends JPanel {
 			addAllCollisions(lastTime, event.getA());
 			addAllCollisions(lastTime, event.getB());
 
-
 			// Redraw the screen
-			if (show) {
+			if (show)
 				repaint();
-			}
 		}
 
 		// Print out the final state of the simulation
